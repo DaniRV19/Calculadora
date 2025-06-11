@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Financiera PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/file-saver"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="js/calculos.js"></script>
+    <script defer src="js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen p-6">
+
+    <main class="max-w-4xl mx-auto bg-white p-8 rounded shadow">
+        <h1 class="text-3xl font-bold mb-6 text-center">Calculadora Financiera Modo Pro 4.0</h1>
+
+        <section id="formulario" class="mb-8 space-y-4">
+            <div>
+                <label for="capital" class="block font-semibold mb-1">Capital inicial (€)</label>
+                <input id="capital" type="number" min="0" class="w-full border rounded p-2" />
+            </div>
+            <div>
+                <label for="interes" class="block font-semibold mb-1">Interés anual (%)</label>
+                <input id="interes" type="number" min="0" step="0.01" class="w-full border rounded p-2" />
+            </div>
+            <div>
+                <label for="anios" class="block font-semibold mb-1">Años</label>
+                <input id="anios" type="number" min="1" class="w-full border rounded p-2" />
+            </div>
+            <div>
+                <label for="aportacion" class="block font-semibold mb-1">Aportación anual (€)</label>
+                <input id="aportacion" type="number" min="0" class="w-full border rounded p-2" />
+            </div>
+            <div class="mt-6 flex gap-4">
+                <button id="calcularBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded">
+                    Calcular
+                </button>
+                <button id="exportarPDF" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
+                    Exportar PDF
+                </button>
+            </div>
+        </section>
+
+        <section id="resultados" class="opacity-0 translate-y-4 transition-all duration-300">
+            <h2 class="text-2xl font-semibold mb-4">Resultados</h2>
+            <div id="tablaResultados" class="overflow-x-auto mb-6"></div>
+            <canvas id="graficaResultados" class="w-full h-64"></canvas>
+        </section>
+
+        <section id="historial" class="mt-12">
+            <h2 class="text-xl font-bold mb-4">Historial de Cálculos</h2>
+            <div id="listaHistorial" class="space-y-2"></div>
+        </section>
+    </main>
+</html>
+<script>
+    document.getElementById("exportarPDF").addEventListener("click", () => {
+      // Simulamos historial, en tu caso saca del localStorage
+      const historial = JSON.parse(localStorage.getItem("historialCalculos")) || [
+        {
+          id: 1,
+          fecha: "2025-06-11 15:00",
+          capital: 1000,
+          interes: 5,
+          anios: 10,
+          aportacion: 100,
+          resultados: [{ saldo: 2000 }, { saldo: 3000 }]
+        }
+      ];
+
+      if(historial.length === 0){
+        alert("No hay cálculos para exportar.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(18);
+      doc.text("Historial de Cálculos Financieros", 14, 22);
+
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(`Exportado el: ${new Date().toLocaleString()}`, 14, 30);
+
+      const columns = [
+        "ID",
+        "Fecha",
+        "Capital Inicial",
+        "Interés Anual (%)",
+        "Años",
+        "Aportación Anual"
+      ];
+
+      const rows = historial.map(c => [
+        c.id,
+        c.fecha,
+        c.capital.toFixed(2),
+        c.interes.toFixed(2),
+        c.anios,
+        c.aportacion.toFixed(2),
+        (c.resultados[c.resultados.length - 1]?.saldo || 0).toFixed(2)
+      ]);
+
+      doc.autoTable({
+        head: [columns],
+        body: rows,
+        startY: 40,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] },
+        alternateRowStyles: { fillColor: [240, 240, 240] },
+        margin: { left: 14, right: 14 }
+      });
+
+      doc.save("historial_calculos.pdf");
+    });
+  </script>
